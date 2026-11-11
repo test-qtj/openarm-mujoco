@@ -64,6 +64,37 @@ For v1 Bimanual Model (from the source checkout):
 openarm-mujoco-launch v1/scene.xml --keyframe home
 ```
 
+## VT03/VT13 Input for the v1 Right-Arm Simulation
+
+Install the optional serial dependency in the Python environment used to launch MuJoCo:
+
+```bash
+python -m pip install -e '.[vt13]'
+```
+
+First check the decoded receiver channels without launching the simulation:
+
+```bash
+python v1/vt13_serial.py --port /dev/ttyACM0
+```
+
+Run the paired right-arm simulation with the receiver connected to the VT03 transmitter:
+
+```bash
+python -u v1/master_follower_sim.py --fps 60 --vt13-port /dev/ttyACM0
+```
+
+The master swaps the horizontal and vertical channels within each stick: Channel 1 to
+J1, Channel 0 to J2, Channel 3 to J3, Channel 2 to J4, and the receiver dial to J5.
+The inputs work as low-speed incremental joint commands: center holds position, and
+full deflection moves at 0.35 rad/s by default. Adjust this with `--vt13-speed`. J6,
+J7, and the gripper remain available from the master window's Control panel; the
+follower copies all eight master joint positions over local UDP.
+
+The serial link uses 921600 baud, 8 data bits, no parity, one stop bit, and no flow
+control. On Ubuntu, if the program reports permission denied for `/dev/ttyACM0`, add
+the login user to the `dialout` group and log out and back in before launching it.
+
 ## OpenArm MuJoCo Web
 
 [OpenArm MuJoCo Web](web/README.md) runs these models right in the

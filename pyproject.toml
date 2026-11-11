@@ -30,6 +30,9 @@ dependencies = [
     "numpy",
 ]
 
+[project.optional-dependencies]
+vt13 = ["pyserial>=3.5"]
+
 [project.urls]
 Changelog = "https://github.com/enactic/openarm_mujoco/releases"
 Issues = "https://github.com/enactic/openarm_mujoco/issues"
