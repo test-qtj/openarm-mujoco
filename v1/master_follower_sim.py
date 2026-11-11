@@ -1,4 +1,4 @@
-"""Run a mouse-controlled OpenArm v1 master and a joint-following follower."""
+"""Run paired OpenArm v1 right arms with viewer controls or VT13 input."""
 
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ def main() -> None:
     parser.add_argument(
         "--vt13-port",
         default=None,
-        help="Optional VT03/VT13 serial port; channels 0-3 and wheel incrementally control J1-J5",
+        help="Optional VT03/VT13 serial port; mode switch selects joint groups and trigger controls gripper",
     )
     parser.add_argument(
         "--vt13-speed",
@@ -74,7 +74,10 @@ def main() -> None:
             master_command.extend(("--vt13-port", args.vt13_port, "--vt13-speed", str(args.vt13_speed)))
         master = subprocess.Popen(master_command)
         if args.vt13_port:
-            print(f"Master window: VT13 on {args.vt13_port} controls J1-J5; use Control sliders for J6, J7, and gripper.")
+            print(
+                f"Master window: VT13 N mode controls J1-J5, C mode controls J6-J7 with inverted axes, "
+                "trigger controls gripper, and S/pause holds."
+            )
         else:
             print("Master window: use the Control panel sliders to move the right arm.")
         print("Follower window: the right arm copies the master's measured joint angles.")
@@ -112,9 +115,8 @@ def main() -> None:
     if is_master and args.vt13_port:
         vt13_reader = VT13SerialReader(args.vt13_port).start()
         print(
-            f"VT13 input {args.vt13_port}: swapped stick axes, "
-            f"ch1→J1, ch0→J2, ch3→J3, ch2→J4, wheel→J5; "
-            f"centered controls hold position; "
+            f"VT13 input {args.vt13_port}: N→J1-J5 (ch1,ch0,ch3,ch2,wheel), "
+            f"C→J6-J7 (ch0,ch1), trigger→gripper, S/pause→hold; "
             f"max speed {args.vt13_speed:.2f} rad/s."
         )
 
@@ -136,15 +138,38 @@ def main() -> None:
                         frame = vt13_reader.latest_frame
                         frame_age = time.monotonic() - vt13_reader.latest_frame_time
                         if frame is not None and frame_age <= 0.20:
-                            ch0, ch1, ch2, ch3 = frame.channels
-                            axes = (ch1, ch0, ch3, ch2, frame.wheel)
-                            for actuator_id, axis_value in zip(actuator_ids[:5], axes, strict=True):
-                                velocity = normalize_axis(axis_value)
+                            axis_commands = ()
+                            controls_enabled = not frame.pause
+                            if controls_enabled and frame.mode_switch == 1:  # N: arm/base joints
+                                ch0, ch1, ch2, ch3 = frame.channels
+                                axis_commands = (
+                                    (actuator_ids[0], ch1, 1.0),
+                                    (actuator_ids[1], ch0, 1.0),
+                                    (actuator_ids[2], ch3, 1.0),
+                                    (actuator_ids[3], ch2, 1.0),
+                                    (actuator_ids[4], frame.wheel, 1.0),
+                                )
+                            elif controls_enabled and frame.mode_switch == 0:  # C: wrist joints
+                                ch0, ch1, _, _ = frame.channels
+                                axis_commands = (
+                                    (actuator_ids[5], ch0, -1.0),
+                                    (actuator_ids[6], ch1, 1.0),
+                                )
+
+                            for actuator_id, axis_value, direction in axis_commands:
+                                velocity = normalize_axis(axis_value) * direction
                                 if velocity == 0.0:
                                     continue
                                 low, high = model.actuator_ctrlrange[actuator_id]
                                 target = float(data.ctrl[actuator_id]) + velocity * args.vt13_speed * elapsed
                                 data.ctrl[actuator_id] = min(float(high), max(float(low), target))
+
+                            # C/N modes: held trigger closes; released trigger opens.
+                            # S mode and the pause button hold the current gripper state.
+                            if controls_enabled and frame.mode_switch in (0, 1):
+                                gripper_id = actuator_ids[7]
+                                low, high = model.jnt_range[joint_ids[7]]
+                                data.ctrl[gripper_id] = float(low) if frame.trigger else float(high)
                     for _ in range(steps_per_frame):
                         mujoco.mj_step(model, data)
                     last_positions = [float(data.qpos[index]) for index in qpos_indices]

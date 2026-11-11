@@ -84,12 +84,15 @@ Run the paired right-arm simulation with the receiver connected to the VT03 tran
 python -u v1/master_follower_sim.py --fps 60 --vt13-port /dev/ttyACM0
 ```
 
-The master swaps the horizontal and vertical channels within each stick: Channel 1 to
-J1, Channel 0 to J2, Channel 3 to J3, Channel 2 to J4, and the receiver dial to J5.
-The inputs work as low-speed incremental joint commands: center holds position, and
-full deflection moves at 0.35 rad/s by default. Adjust this with `--vt13-speed`. J6,
-J7, and the gripper remain available from the master window's Control panel; the
-follower copies all eight master joint positions over local UDP.
+The master swaps the horizontal and vertical channels within each stick. In N mode,
+Channel 1 controls J1, Channel 0 controls J2, Channel 3 controls J3, Channel 2 controls
+J4, and the receiver dial controls J5. In C mode, Channel 0 controls J6 and Channel 1
+controls J7, without software sign inversion. The trigger closes the gripper while held
+and opens it when released. In S mode, or while the pause button is held, all VT13
+commands hold their current joint positions. The inputs work as low-speed incremental
+joint commands: centered axes hold position, and full deflection moves at 0.35 rad/s by
+default. Adjust this with `--vt13-speed`. The follower copies all eight master joint
+positions over local UDP.
 
 The serial link uses 921600 baud, 8 data bits, no parity, one stop bit, and no flow
 control. On Ubuntu, if the program reports permission denied for `/dev/ttyACM0`, add
