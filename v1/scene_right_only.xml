@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<mujoco model="openarm_bimanual scene">
+<mujoco model="openarm right-arm follower with energy unit">
   <include file="openarm_right_only.xml"/>
 
   <statistic center="0 0 0.43" extent=".85" meansize="0.05"/>
@@ -31,10 +31,35 @@ limitations under the License.
     <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3"
       markrgb="0.8 0.8 0.8" width="300" height="300"/>
     <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+    <material name="energy_unit_orange" rgba="0.95 0.24 0.035 1" reflectance="0.15"/>
+    <material name="pickup_table" rgba="0.24 0.27 0.3 1" reflectance="0.08"/>
+    <mesh name="energy_unit_mesh" file="energy_unit/base_link.stl" scale="0.001 0.001 0.001"/>
   </asset>
 
   <worldbody>
     <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
     <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
+
+    <!-- Table and free energy-unit prop for VT13 master/follower grasp practice. -->
+    <geom name="pickup_table_top" type="box" pos="0.40 -0.16 0.155" size="0.30 0.28 0.015"
+      material="pickup_table" friction="1 0.01 0.001"/>
+    <geom name="pickup_table_leg_front_left" type="box" pos="0.15 0.06 0.075" size="0.025 0.025 0.08"
+      material="pickup_table"/>
+    <geom name="pickup_table_leg_front_right" type="box" pos="0.65 0.06 0.075" size="0.025 0.025 0.08"
+      material="pickup_table"/>
+    <geom name="pickup_table_leg_back_left" type="box" pos="0.15 -0.38 0.075" size="0.025 0.025 0.08"
+      material="pickup_table"/>
+    <geom name="pickup_table_leg_back_right" type="box" pos="0.65 -0.38 0.075" size="0.025 0.025 0.08"
+      material="pickup_table"/>
+
+    <!-- URDF mesh is oriented with its 150 mm axis along body Y; rotate it upright so
+         that the long axis is vertical and the 95 mm section spans the gripper. -->
+    <body name="energy_unit" pos="0.35 -0.16 0.245" quat="0.70710678 0.70710678 0 0">
+      <freejoint name="energy_unit_free"/>
+      <inertial pos="0 0.013143409 -0.000032188116" mass="0.35699883"
+        fullinertia="0.0011347999 0.00042101044 0.0011347472 0.000000014076229 -0.0000000062786844 0.000000012496557"/>
+      <geom name="energy_unit_collision_visual" type="mesh" mesh="energy_unit_mesh"
+        material="energy_unit_orange" condim="3" friction="1.5 0.02 0.005"/>
+    </body>
   </worldbody>
 </mujoco>
