@@ -32,6 +32,7 @@ dependencies = [
 
 [project.optional-dependencies]
 vt13 = ["pyserial>=3.5"]
+competition = ["paho-mqtt>=2.1,<3"]
 
 [project.urls]
 Changelog = "https://github.com/enactic/openarm_mujoco/releases"

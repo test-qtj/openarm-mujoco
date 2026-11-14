@@ -17,7 +17,7 @@ limitations under the License.
 <mujoco model="openarm right-arm follower with energy unit">
   <include file="openarm_right_only.xml"/>
 
-  <statistic center="0 0 0.43" extent=".85" meansize="0.05"/>
+  <statistic center="0.48 -0.15 0.45" extent="1.15" meansize="0.05"/>
 
   <visual>
     <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
@@ -28,38 +28,69 @@ limitations under the License.
 
   <asset>
     <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
-    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3"
-      markrgb="0.8 0.8 0.8" width="300" height="300"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8" width="300" height="300"/>
     <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
-    <material name="energy_unit_orange" rgba="0.95 0.24 0.035 1" reflectance="0.15"/>
-    <material name="pickup_table" rgba="0.24 0.27 0.3 1" reflectance="0.08"/>
-    <mesh name="energy_unit_mesh" file="energy_unit/base_link.stl" scale="0.001 0.001 0.001"/>
+    <material name="energy_rack_material" rgba="0.38 0.42 0.46 1" reflectance="0.12"/>
+    <material name="energy_cell_material" rgba="0.95 0.24 0.035 1" reflectance="0.15"/>
+    <mesh name="energy_rack_visual_mesh" file="energy_rack/rack_visual.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="energy_cell_mesh_1" file="energy_rack/energy_cell_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="energy_cell_mesh_2" file="energy_rack/energy_cell_2.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="energy_cell_mesh_3" file="energy_rack/energy_cell_3.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="energy_cell_mesh_4" file="energy_rack/energy_cell_4.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="energy_cell_mesh_5" file="energy_rack/energy_cell_5.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="energy_cell_mesh_6" file="energy_rack/energy_cell_6.stl" scale="0.001 0.001 0.001"/>
   </asset>
 
   <worldbody>
     <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
     <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
-
-    <!-- Table and free energy-unit prop for VT13 master/follower grasp practice. -->
-    <geom name="pickup_table_top" type="box" pos="0.40 -0.16 0.155" size="0.30 0.28 0.015"
-      material="pickup_table" friction="1 0.01 0.001"/>
-    <geom name="pickup_table_leg_front_left" type="box" pos="0.15 0.06 0.075" size="0.025 0.025 0.08"
-      material="pickup_table"/>
-    <geom name="pickup_table_leg_front_right" type="box" pos="0.65 0.06 0.075" size="0.025 0.025 0.08"
-      material="pickup_table"/>
-    <geom name="pickup_table_leg_back_left" type="box" pos="0.15 -0.38 0.075" size="0.025 0.025 0.08"
-      material="pickup_table"/>
-    <geom name="pickup_table_leg_back_right" type="box" pos="0.65 -0.38 0.075" size="0.025 0.025 0.08"
-      material="pickup_table"/>
-
-    <!-- URDF mesh is oriented with its 150 mm axis along body Y; rotate it upright so
-         that the long axis is vertical and the 95 mm section spans the gripper. -->
-    <body name="energy_unit" pos="0.35 -0.16 0.245" quat="0.70710678 0.70710678 0 0">
-      <freejoint name="energy_unit_free"/>
-      <inertial pos="0 0.013143409 -0.000032188116" mass="0.35699883"
-        fullinertia="0.0011347999 0.00042101044 0.0011347472 0.000000014076229 -0.0000000062786844 0.000000012496557"/>
-      <geom name="energy_unit_collision_visual" type="mesh" mesh="energy_unit_mesh"
-        material="energy_unit_orange" condim="3" friction="1.5 0.02 0.005"/>
+    <!-- Imported six-slot rack. Its source collision meshes overlap the CAD cell meshes,
+         so the rack stays visual-only and the six cells use small slot support pads. -->
+    <body name="energy_rack" pos="0.48302622 -0.18551748 0.49617102" quat="0.18301270 0.68301270 -0.18301270 -0.68301270">
+      <geom name="energy_rack_visual" type="mesh" mesh="energy_rack_visual_mesh" material="energy_rack_material" contype="0" conaffinity="0"/>
+    </body>
+    <!-- Small collision pads beneath the CAD slot centers keep each free cell seated. -->
+    <geom name="energy_cell_slot_support_1" type="box" pos="0.48000000 -0.01664666 0.59447476" size="0.025000 0.025000 0.005" group="3" friction="1.5 0.02 0.005"/>
+    <geom name="energy_cell_slot_support_2" type="box" pos="0.48000000 -0.14815021 0.51426569" size="0.025000 0.025000 0.005" group="3" friction="1.5 0.02 0.005"/>
+    <geom name="energy_cell_slot_support_3" type="box" pos="0.48000000 -0.28712399 0.59449067" size="0.025000 0.025000 0.005" group="3" friction="1.5 0.02 0.005"/>
+    <geom name="energy_cell_slot_support_4" type="box" pos="0.48000000 -0.28335334 0.74852524" size="0.025000 0.025000 0.005" group="3" friction="1.5 0.02 0.005"/>
+    <geom name="energy_cell_slot_support_5" type="box" pos="0.48000000 -0.15184979 0.82873431" size="0.025000 0.025000 0.005" group="3" friction="1.5 0.02 0.005"/>
+    <geom name="energy_cell_slot_support_6" type="box" pos="0.48000000 -0.01287601 0.74850933" size="0.025000 0.025000 0.005" group="3" friction="1.5 0.02 0.005"/>
+    <body name="energy_cell_1" pos="0.48000000 -0.01664666 0.64097476" quat="0.18301270 0.68301270 -0.18301270 -0.68301270">
+      <freejoint name="energy_cell_1_free"/>
+      <inertial pos="0 0 0" mass="0.35699883" diaginertia="0.00080 0.00080 0.00054"/>
+      <geom name="energy_cell_1_visual" type="mesh" mesh="energy_cell_mesh_1" material="energy_cell_material" contype="0" conaffinity="0" group="1"/>
+      <geom name="energy_cell_1_collision" type="box" size="0.042000 0.042000 0.042000" quat="0.18301270 -0.68301270 0.18301270 0.68301270" group="3" condim="3" friction="1.5 0.02 0.005"/>
+    </body>
+    <body name="energy_cell_2" pos="0.48000000 -0.14815021 0.56076569" quat="0.18301270 0.68301270 -0.18301270 -0.68301270">
+      <freejoint name="energy_cell_2_free"/>
+      <inertial pos="0 0 0" mass="0.35699883" diaginertia="0.00080 0.00080 0.00054"/>
+      <geom name="energy_cell_2_visual" type="mesh" mesh="energy_cell_mesh_2" material="energy_cell_material" contype="0" conaffinity="0" group="1"/>
+      <geom name="energy_cell_2_collision" type="box" size="0.042000 0.042000 0.042000" quat="0.18301270 -0.68301270 0.18301270 0.68301270" group="3" condim="3" friction="1.5 0.02 0.005"/>
+    </body>
+    <body name="energy_cell_3" pos="0.48000000 -0.28712399 0.64099067" quat="0.18301270 0.68301270 -0.18301270 -0.68301270">
+      <freejoint name="energy_cell_3_free"/>
+      <inertial pos="0 0 0" mass="0.35699883" diaginertia="0.00080 0.00080 0.00054"/>
+      <geom name="energy_cell_3_visual" type="mesh" mesh="energy_cell_mesh_3" material="energy_cell_material" contype="0" conaffinity="0" group="1"/>
+      <geom name="energy_cell_3_collision" type="box" size="0.042000 0.042000 0.042000" quat="0.18301270 -0.68301270 0.18301270 0.68301270" group="3" condim="3" friction="1.5 0.02 0.005"/>
+    </body>
+    <body name="energy_cell_4" pos="0.48000000 -0.28335334 0.79502524" quat="0.18301270 0.68301270 -0.18301270 -0.68301270">
+      <freejoint name="energy_cell_4_free"/>
+      <inertial pos="0 0 0" mass="0.35699883" diaginertia="0.00080 0.00080 0.00054"/>
+      <geom name="energy_cell_4_visual" type="mesh" mesh="energy_cell_mesh_4" material="energy_cell_material" contype="0" conaffinity="0" group="1"/>
+      <geom name="energy_cell_4_collision" type="box" size="0.042000 0.042000 0.042000" quat="0.18301270 -0.68301270 0.18301270 0.68301270" group="3" condim="3" friction="1.5 0.02 0.005"/>
+    </body>
+    <body name="energy_cell_5" pos="0.48000000 -0.15184979 0.87523431" quat="0.18301270 0.68301270 -0.18301270 -0.68301270">
+      <freejoint name="energy_cell_5_free"/>
+      <inertial pos="0 0 0" mass="0.35699883" diaginertia="0.00080 0.00080 0.00054"/>
+      <geom name="energy_cell_5_visual" type="mesh" mesh="energy_cell_mesh_5" material="energy_cell_material" contype="0" conaffinity="0" group="1"/>
+      <geom name="energy_cell_5_collision" type="box" size="0.042000 0.042000 0.042000" quat="0.18301270 -0.68301270 0.18301270 0.68301270" group="3" condim="3" friction="1.5 0.02 0.005"/>
+    </body>
+    <body name="energy_cell_6" pos="0.48000000 -0.01287601 0.79500933" quat="0.18301270 0.68301270 -0.18301270 -0.68301270">
+      <freejoint name="energy_cell_6_free"/>
+      <inertial pos="0 0 0" mass="0.35699883" diaginertia="0.00080 0.00080 0.00054"/>
+      <geom name="energy_cell_6_visual" type="mesh" mesh="energy_cell_mesh_6" material="energy_cell_material" contype="0" conaffinity="0" group="1"/>
+      <geom name="energy_cell_6_collision" type="box" size="0.042000 0.042000 0.042000" quat="0.18301270 -0.68301270 0.18301270 0.68301270" group="3" condim="3" friction="1.5 0.02 0.005"/>
     </body>
   </worldbody>
 </mujoco>
